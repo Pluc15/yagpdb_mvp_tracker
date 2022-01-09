@@ -94,7 +94,7 @@ Command to report a MvP death time
 * `!mvpdashboard`
 
 ```go
-{{ $messageId := sendMessageRetID nil "__**MvP Dashboard**__\nEmpty" }}
+{{ $messageId := sendMessageRetID nil "__**MvP Dashboard**__\n(The list of MVPs will be populated after inserting the first timer)" }}
 {{ dbSet 118 "mvp_dashbord_message_id" (str $messageId) }}
 ```
 
