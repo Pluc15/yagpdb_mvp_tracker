@@ -10,7 +10,7 @@
 Command to report a MvP death time
 
 * `!mvp <mvp-name> <UtcTimeOfDeath:optional>`
-* `!mvp thana 13h20`
+* `!mvp thana 13h20` (insert the time on the tomb)
 * `!mvp thana`
 
 ```go
