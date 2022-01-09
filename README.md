@@ -1,7 +1,9 @@
 # YAGPDB based MVP timer
 
 * Copy paste the commands
-* Update the `{{ /* Config */ }}` section
+* Update the `{{/* Config */}}` section
+
+# User Commands
 
 ## Start a timer (!mvp)
 
@@ -12,11 +14,11 @@ Command to report a MvP death time
 * `!mvp thana`
 
 ```go
-{{ /* Config */ }}
-{{ $callbackCommandId := 2 }} {{ /* Set this to the ID of the Callback command */ }}
-{{ $mentionRoleId := 929571707201663048 }} {{ /* Set this to the role ID for the people that wants tracker notifications */ }}
+{{/* Config */}}
+{{ $callbackCommandId := 2 }} {{/* Set this to the ID of the Callback command */}}
+{{ $mentionRoleId := 929571707201663048 }} {{/* Set this to the role ID for the people that wants tracker notifications */}}
 
-{{ /* Argument parsing */ }}
+{{/* Argument parsing */}}
 {{ $args := parseArgs
     1
     "!mvp <mvp-name> <UtcTimeOfDeath>"
@@ -29,15 +31,15 @@ Command to report a MvP death time
 {{ end }}
 {{ $mvpKey := ($args.Get 0) }}
 
-{{ /* Get MvP info from DB */ }}
-{{ $mvpName := dbGet 118 (joinStr "" "mvp_" $mvpKey "_name") }}
-{{ $mvpResp := dbGet 118 (joinStr "" "mvp_" $mvpKey "_resp") }}
-{{ $mvpVar := dbGet 118 (joinStr "" "mvp_" $mvpKey "_var") }}
-{{ $mvpWarn := dbGet 118 (joinStr "" "mvp_" $mvpKey "_warn") }}
+{{/* Get MvP info from DB */}}
+{{ $mvpName := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_name")).Value }}
+{{ $mvpResp := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_resp")).Value }}
+{{ $mvpVar := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_var")).Value }}
+{{ $mvpWarn := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_warn")).Value }}
 
 {{ if $mvpName }}
-    {{ /* Calculations */ }}
-    {{ $mvpWarnAfter = sub $mvpResp $mvpWarn }}
+    {{/* Calculations */}}
+    {{ $mvpWarnAfter := sub $mvpResp $mvpWarn }}
     {{ $mvpWarnAfterDuration := (toDuration (mult $mvpWarnAfter .TimeMinute)) }}
     {{ $mvpWarnTime := ($mvpDeathTime.Add $mvpWarnAfterDuration) }}
     {{ $mvpWarnInSeconds := toInt (round ($mvpWarnTime.Sub currentTime).Seconds) }}
@@ -45,25 +47,25 @@ Command to report a MvP death time
     {{ $mvpRespTime := ($mvpDeathTime.Add $mvpRespDuration) }}
     {{ $mvpRespInSeconds := toInt (round ($mvpRespTime.Sub currentTime).Seconds) }}
 
-    {{ /* Save the new time in the DB */ }}
+    {{/* Save the new time in the DB */}}
     {{ $mvpTimerKey := (joinStr "" "mvp_timer_" $mvpKey) }}
     {{ dbSet 118 $mvpTimerKey $mvpRespTime }}
 
-    {{ /* Send message */ }}
+    {{/* Send message */}}
     {{ if le $mvpRespInSeconds 0  }}
         {{ print $mvpName " already respawned in the respawn window" }}
     {{ else }}
         {{ print $mvpName " died <t:" $mvpDeathTime.Unix ":R>. It will spawn again <t:" $mvpRespTime.Unix ":R>" }}
     {{ end }}
 
-    {{ /* Schedule the warning notification */ }}
+    {{/* Schedule the warning notification */}}
     {{ if le $mvpWarnInSeconds 0  }}
         {{ print $mvpName " already in the notification window" }}
     {{ else }}
         {{ execCC $callbackCommandId nil $mvpWarnInSeconds (sdict "MvpName" $mvpName "RespawnTime" $mvpRespTime "MentionRoleId" $mentionRoleId) }}
     {{ end }}
 
-    {{ /* Update Dashboard spawn warning message */ }}
+    {{/* Update Dashboard spawn warning message */}}
     {{ $mvpDashbordMessageId := (dbGet 118 "mvp_dashbord_message_id").Value }}
     {{ if $mvpDashbordMessageId }}
         {{ $mvpTimers := dbGetPattern 118 "mvp_timer_%" 100 0 }}
@@ -102,6 +104,8 @@ Command to report a MvP death time
 * `!mvpclear thana`
 
 WIP
+
+# Admin Commands
 
 ## Init MVP database (!mvpinit)
 
@@ -287,13 +291,18 @@ Command you need to run on every MVP keys you want to be trackable with `!mvp`
 {{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_resp") ($mvpResps.Get $mvpKey) }}
 {{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_var") ($mvpVars.Get $mvpKey) }}
 {{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_warn") ($mvpWarns.Get $mvpKey) }}
-{{ dbSet 118 (joinStr "" "mvp_key_" $mvpKey) ($mvpKey) }}
-{{ dbSet 118 (joinStr "" "mvp_timer_" $mvpKey) ($mvpWarns.Get $mvpKey) }}
+{{ dbSet 118 (joinStr "" "mvp_timer_" $mvpKey) nil }}
 
 Initiated {{ $mvpNames.Get $mvpKey }}!
 ```
 
-## Debug command (DB Dump)
+## Hard Reset (!mvphardreset)
+
+```go
+{{ dbDelMultiple (sdict "userID" 118 "pattern" "mvp_%") 100 0 }}
+```
+
+## Debug (!mvpdebug)
 
 ```go
 {{ $data := dbGetPattern 118 "mvp_%" 100 0 }}
