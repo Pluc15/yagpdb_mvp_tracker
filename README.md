@@ -32,10 +32,10 @@ Command to report a MvP death time
 {{ $mvpKey := ($args.Get 0) }}
 
 {{/* Get MvP info from DB */}}
-{{ $mvpName := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_name")).Value }}
-{{ $mvpResp := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_resp")).Value }}
-{{ $mvpVar := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_var")).Value }}
-{{ $mvpWarn := (dbGet 118 (joinStr "" "mvp_" $mvpKey "_warn")).Value }}
+{{ $mvpName := (dbGet 118 (joinStr "" "mvp_name_" $mvpKey)).Value }}
+{{ $mvpResp := (dbGet 118 (joinStr "" "mvp_resp_" $mvpKey)).Value }}
+{{ $mvpVar := (dbGet 118 (joinStr "" "mvp_var_" $mvpKey)).Value }}
+{{ $mvpWarn := (dbGet 118 (joinStr "" "mvp_warn_" $mvpKey)).Value }}
 
 {{ if $mvpName }}
     {{/* Calculations */}}
@@ -71,7 +71,11 @@ Command to report a MvP death time
         {{ $mvpTimers := dbGetPattern 118 "mvp_timer_%" 100 0 }}
         {{ $mvpDashboard := "__**MvP Dashboard**__" }}
         {{ range $mvpTimer := $mvpTimers }}
-            {{ $mvpDashboard = joinStr "" $mvpDashboard "\n" $mvpTimer.Key ": <t:" $mvpTimer.Value.Unix ":R>" }}
+            {{ if $mvpTimer.Value }}
+                {{ $mvpDashboard = joinStr "" $mvpDashboard "\n" $mvpTimer.Key ": <t:" $mvpTimer.Value.Unix ":R>" }}
+            {{ else }}
+                {{ $mvpDashboard = joinStr "" $mvpDashboard "\n" $mvpTimer.Key ": `not tracked`" }}
+            {{ end }}
         {{ end }}
         {{ editMessage nil $mvpDashbordMessageId $mvpDashboard }}
     {{ else }}
@@ -158,7 +162,7 @@ Command you need to run on every MVP keys you want to be trackable with `!mvp`
     "valk" "Valkyrie Randgris (odin_tem03)"
     "vesper" "Vesper (jupe_core)"
     "bio2" "Ygnizem / Egnigem Cenia (lhz_dun02)"
- }}
+}}
 
 {{ $mvpResps := sdict
     "amonra" 60
@@ -241,7 +245,7 @@ Command you need to run on every MVP keys you want to be trackable with `!mvp`
     "valk" 10
     "vesper" 10
     "bio2" 10
- }}
+}}
 
 {{ $mvpWarns := sdict
     "amonra" 5
@@ -283,14 +287,14 @@ Command you need to run on every MVP keys you want to be trackable with `!mvp`
     "valk" 20
     "vesper" 15
     "bio2" 5
- }}
+}}
 
 {{ $mvpKey := ($args.Get 0) }}
 
-{{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_name") ($mvpNames.Get $mvpKey) }}
-{{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_resp") ($mvpResps.Get $mvpKey) }}
-{{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_var") ($mvpVars.Get $mvpKey) }}
-{{ dbSet 118 (joinStr "" "mvp_" $mvpKey "_warn") ($mvpWarns.Get $mvpKey) }}
+{{ dbSet 118 (joinStr "" "mvp_name_" $mvpKey) ($mvpNames.Get $mvpKey) }}
+{{ dbSet 118 (joinStr "" "mvp_resp_" $mvpKey) ($mvpResps.Get $mvpKey) }}
+{{ dbSet 118 (joinStr "" "mvp_var_" $mvpKey) ($mvpVars.Get $mvpKey) }}
+{{ dbSet 118 (joinStr "" "mvp_warn_" $mvpKey) ($mvpWarns.Get $mvpKey) }}
 {{ dbSet 118 (joinStr "" "mvp_timer_" $mvpKey) nil }}
 
 Initiated {{ $mvpNames.Get $mvpKey }}!
